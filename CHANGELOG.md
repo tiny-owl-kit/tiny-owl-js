@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-01
+
+### Added
+
+- New optional subpath export `@tiny-owl-kit/observability/express` (task 015.1): `tinyowlExpress(client)` middleware attaches `req.tinyowl`, a per-request scoped logger that auto-fills `context.method` / `context.endpoint` (matched route template, not the raw URL, to keep cardinality low) on every log call
+- `tinyowlExpress.errorHandler(client)` — Express error-handling middleware that auto-logs uncaught errors with `method` / `endpoint` / `statusCode`, then forwards to `next(err)` so the application's own error response logic is unaffected
+- New optional subpath export `@tiny-owl-kit/observability/nextjs` (task 015.1, Phase 2): `withTinyowl(client, handler, options?)` wraps an App Router Route Handler to auto-log `method` / `endpoint` / `statusCode` for non-2xx responses and thrown errors (re-thrown after logging so Next's own error handling still runs); accepts an optional `{ route }` override to keep cardinality low on dynamic routes
+- Additive and backward-compatible — no change to the core `EchoNova`/`TinyOwl` log API; existing users are unaffected
+- Privacy-conscious by design: only `method`, `endpoint`, and `statusCode` are auto-captured — request bodies, query strings, headers, and cookies are never read automatically
+- `express` added as an optional peer dependency (types-only at the core; no new runtime dependency for users who don't import the `/express` subpath); `next` added as an optional peer dependency for the `/nextjs` subpath — its types are not imported directly, so no `next` install is required to build or type-check the SDK itself
+
 ## [1.2.6] - Unreleased
 
 ## [1.2.5] - 2026-05-18

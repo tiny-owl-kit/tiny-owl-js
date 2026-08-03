@@ -17,7 +17,7 @@ The file contains step-by-step integration instructions, framework examples (Exp
 ```javascript
 import { TinyOwl } from "@tiny-owl-kit/observability";
 
-// TinyOwl SDK v1.3.3 — Enhanced Security Mode (Required)
+// TinyOwl SDK v1.4.0 — Enhanced Security Mode (Required)
 const tinyowl = new TinyOwl({
   apiKey: "YOUR_API_KEY",
   projectSecret: "YOUR_PROJECT_SECRET", // 🔒 Required for HMAC verification
@@ -160,6 +160,81 @@ await req.logger.log("Response sent", {
 
 > **Good traceId values**: HTTP `X-Request-Id`, a job run ID, or a user session token. Use one ID per logical operation and reuse it across all events from that context.
 
+### 🚏 Express Auto-Capture (Request Context)
+
+The optional `@tiny-owl-kit/observability/express` subpath export auto-fills
+`context.endpoint` / `context.method` / `context.statusCode` on every log call
+so you don't have to pass them manually. It's additive and opt-in — the core
+SDK is unaffected if you never import it.
+
+```javascript
+import { TinyOwl } from "@tiny-owl-kit/observability";
+import { tinyowlExpress } from "@tiny-owl-kit/observability/express";
+
+const client = new TinyOwl({
+  apiKey: process.env.TINYOWL_API_KEY,
+  projectSecret: process.env.TINYOWL_PROJECT_SECRET,
+});
+
+app.use(tinyowlExpress(client)); // attaches req.tinyowl
+
+app.get("/users/:id", async (req, res) => {
+  await req.tinyowl.info("Fetched user"); // context: { method: "GET", endpoint: "/users/:id" }
+  res.json(await getUser(req.params.id));
+});
+
+// Mount last — auto-logs uncaught errors, then forwards to your own error handler
+app.use(tinyowlExpress.errorHandler(client));
+```
+
+- **Low cardinality**: uses the matched route template (`/users/:id`), not the
+  raw URL with real ids, to avoid exploding event cardinality.
+- **Privacy by default**: only `method`, `endpoint`, and (on errors)
+  `statusCode` are auto-captured. Request bodies, query strings, headers, and
+  cookies are **never** read automatically — pass them explicitly per call if
+  you need them: `req.tinyowl.info("...", { userId })`.
+- **Concurrency-safe**: a fresh scoped logger is created per request; nothing
+  is shared across concurrent requests.
+- Not using Express? The manual `withContext()` pattern shown above works with
+  any framework.
+
+### ▲ Next.js Auto-Capture (App Router Route Handlers)
+
+The optional `@tiny-owl-kit/observability/nextjs` subpath export wraps App
+Router Route Handlers (`route.ts`) with the same auto-capture behavior as the
+Express adapter. It's additive and opt-in, and it doesn't import `next/server`
+internally — any request object shaped like Next's `NextRequest` works.
+
+```typescript
+// app/api/users/[id]/route.ts
+import { TinyOwl } from "@tiny-owl-kit/observability";
+import { withTinyowl } from "@tiny-owl-kit/observability/nextjs";
+import type { NextRequest } from "next/server";
+
+const client = new TinyOwl({
+  apiKey: process.env.TINYOWL_API_KEY,
+  projectSecret: process.env.TINYOWL_PROJECT_SECRET,
+});
+
+export const GET = withTinyowl(
+  client,
+  async (req: NextRequest) => {
+    const user = await getUser();
+    return Response.json(user);
+  },
+  { route: "/api/users/[id]" }, // low-cardinality template for dynamic routes
+);
+```
+
+- **Low cardinality**: pass `options.route` (e.g. `/users/[id]`) on dynamic
+  routes; otherwise the concrete request path is used.
+- **Privacy by default**: only `method`, `endpoint`, and `statusCode` are
+  auto-captured — non-2xx responses (`status >= 400`) and thrown errors
+  (`statusCode: 500`) are logged automatically; everything else stays opt-in.
+- Thrown errors are re-thrown after logging — Next's own error handling always
+  still runs.
+- Fire-and-forget logging — a logging failure never breaks the route response.
+
 ### Convenience Methods
 
 The SDK provides convenience methods for each severity level:
@@ -184,6 +259,8 @@ For complete, runnable examples, check out these files in the repository:
 
 - **[security-examples.js](./examples/security-examples.js)** - Basic security features, SDK configuration, error handling, and manual HMAC implementation
 - **[security-hardening.js](./examples/security-hardening.js)** - Production-ready examples, audit trails, rate limiting, HTTPS enforcement, and SDK self-tracking
+- **[express-auto-capture.js](./examples/express-auto-capture.js)** - Express middleware/error-handler adapter with auto-captured request context
+- **[nextjs-auto-capture.js](./examples/nextjs-auto-capture.js)** - Next.js App Router Route Handler adapter with auto-captured request context
 
 These examples demonstrate all security features and best practices for production deployments.
 
@@ -555,5 +632,5 @@ For issues and questions:
 
 ---
 
-**Version**: 1.3.3  
-**Last Updated**: May 20, 2026
+**Version**: 1.4.0  
+**Last Updated**: August 1, 2026

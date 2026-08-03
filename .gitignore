@@ -29,7 +29,4 @@ build/
 .env
 
 # TEST
-*.test.js
-*.spec.js
-*.test.ts
 test-local.mjs

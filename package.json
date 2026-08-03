@@ -1,6 +1,6 @@
 {
   "name": "@tiny-owl-kit/observability",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "TinyOwl JavaScript SDK - Lightweight observability and logging with enterprise-grade security",
   "keywords": [
     "observability",
@@ -36,11 +36,31 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./express": {
+      "import": {
+        "types": "./dist/express.d.ts",
+        "default": "./dist/express.js"
+      },
+      "require": {
+        "types": "./dist/express.d.cts",
+        "default": "./dist/express.cjs"
+      }
+    },
+    "./nextjs": {
+      "import": {
+        "types": "./dist/nextjs.d.ts",
+        "default": "./dist/nextjs.js"
+      },
+      "require": {
+        "types": "./dist/nextjs.d.cts",
+        "default": "./dist/nextjs.cjs"
+      }
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --dts --format esm,cjs --clean",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts src/express.ts src/nextjs.ts --dts --format esm,cjs --clean",
+    "dev": "tsup src/index.ts src/express.ts src/nextjs.ts --watch",
     "test": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "test:node": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest --testEnvironment=node",
     "test:browser": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest --testEnvironment=jsdom",
@@ -61,10 +81,24 @@
   "publishConfig": {
     "access": "public"
   },
+  "peerDependencies": {
+    "express": ">=4",
+    "next": ">=13"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
     "cross-env": "^10.1.0",
+    "express": "^5.2.1",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "ts-jest": "^29.4.5",
