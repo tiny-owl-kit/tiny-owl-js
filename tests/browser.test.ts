@@ -6,7 +6,9 @@
 import { jest } from "@jest/globals";
 import { initTinyIT } from "../src/index.js";
 
-const mockFetch = globalThis.fetch as jest.Mock;
+const mockFetch = globalThis.fetch as jest.MockedFunction<
+  (...args: any[]) => Promise<any>
+>;
 
 describe("Browser Environment Compatibility", () => {
   beforeEach(() => {
