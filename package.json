@@ -1,6 +1,6 @@
 {
   "name": "@tiny-owl-kit/observability",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "TinyOwl JavaScript SDK - Lightweight observability and logging with enterprise-grade security",
   "keywords": [
     "observability",
@@ -16,11 +16,11 @@
   "homepage": "https://tiny-owl-kit.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/net-partner-011-ab/tiny-owl-js",
+    "url": "https://github.com/tiny-owl-kit/tiny-owl-js",
     "directory": "tiny-owl-js"
   },
   "bugs": {
-    "url": "https://github.com/net-partner-011-ab/tiny-owl-js/issues"
+    "url": "https://github.com/tiny-owl-kit/tiny-owl-js/issues"
   },
   "type": "module",
   "main": "dist/index.cjs",

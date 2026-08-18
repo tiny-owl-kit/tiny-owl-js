@@ -4,7 +4,7 @@ Official JavaScript SDK for TinyOwl Observability - A lightweight event logging 
 
 ## 🤖 AI Agent Setup
 
-Drop [`tinyowl-sdk.instructions.md`](https://github.com/net-partner-011-ab/tiny-owl-js/blob/main/tinyowl-sdk.instructions.md) into your project root and tell your AI agent or Copilot:
+Drop [`tinyowl-sdk.instructions.md`](https://github.com/tiny-owl-kit/tiny-owl-js/blob/main/tinyowl-sdk.instructions.md) into your project root and tell your AI agent or Copilot:
 
 > "Follow the instructions in `tinyowl-sdk.instructions.md` and integrate the TinyOwl SDK."
 
