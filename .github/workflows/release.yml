@@ -68,7 +68,7 @@ jobs:
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.1.0
         with:
           node-version: 20
-          registry-url: "https://registry.npmjs.org"
+          # no registry-url: prevents setup-node from injecting NODE_AUTH_TOKEN
 
       - name: Install dependencies
         if: steps.npm_check.outputs.published == 'false'
@@ -94,9 +94,8 @@ jobs:
 
       - name: Publish to npm
         if: steps.npm_check.outputs.published == 'false'
+        # No NODE_AUTH_TOKEN → npm detects OIDC env and uses Trusted Publishing.
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Skip (already on npm)
         if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
