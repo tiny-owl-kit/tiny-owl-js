@@ -92,10 +92,19 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
 
+      - name: Debug auth environment
+        if: steps.npm_check.outputs.published == 'false'
+        run: |
+          echo "NODE_AUTH_TOKEN set: $([ -n "$NODE_AUTH_TOKEN" ] && echo YES || echo no)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: $([ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && echo YES || echo no)"
+          npm config list
+
       - name: Publish to npm
         if: steps.npm_check.outputs.published == 'false'
-        # No NODE_AUTH_TOKEN → npm detects OIDC env and uses Trusted Publishing.
         run: npm publish --provenance --access public
+        env:
+          # Force-clear any token that might override OIDC detection.
+          NODE_AUTH_TOKEN: ""
 
       - name: Skip (already on npm)
         if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
