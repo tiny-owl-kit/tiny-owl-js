@@ -16,7 +16,7 @@
   "homepage": "https://tiny-owl-kit.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tiny-owl-kit/tiny-owl-js",
+    "url": "git+https://github.com/tiny-owl-kit/tiny-owl-js.git",
     "directory": "tiny-owl-js"
   },
   "bugs": {

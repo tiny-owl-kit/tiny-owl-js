@@ -1,8 +1,9 @@
 name: Release
 
-# On every push to main that touches package.json: read the version, skip if the
-# tag already exists (no-op for bumps that haven't changed version), otherwise
-# run tests + build, create the git tag, and publish to npm — all in one job.
+# On every push to main that touches package.json: read the version, then:
+#   - tag exists + npm published  → skip (no-op)
+#   - tag exists + npm NOT published → retry publish only (handles failed publish)
+#   - tag missing                 → full flow: test → build → tag → publish
 #
 # Why one job: GitHub Actions does not trigger downstream workflows when
 # GITHUB_TOKEN pushes a tag, so the old auto-tag → publish.yml chain never fired.
@@ -45,19 +46,31 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Skip (version unchanged)
-        if: steps.tag_check.outputs.exists == 'true'
-        run: echo "Tag ${{ steps.tag_check.outputs.tag }} already exists — version unchanged, skipping release."
+      - name: Check if version already published to npm
+        id: npm_check
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          if npm view "@tiny-owl-kit/observability@${VERSION}" version 2>/dev/null | grep -qF "${VERSION}"; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip (tag exists and already on npm)
+        if: steps.tag_check.outputs.exists == 'true' && steps.npm_check.outputs.published == 'true'
+        run: echo "v${{ steps.pkg.outputs.version }} is tagged and on npm — nothing to do."
+
+      # Everything below is skipped when both tag and npm are already done.
 
       - name: Setup Node.js
-        if: steps.tag_check.outputs.exists == 'false'
+        if: steps.npm_check.outputs.published == 'false'
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.1.0
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        if: steps.tag_check.outputs.exists == 'false'
+        if: steps.npm_check.outputs.published == 'false'
         run: npm ci
 
       - name: Run tests
@@ -78,24 +91,14 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
 
-      - name: Check if version already published to npm
-        if: steps.tag_check.outputs.exists == 'false'
-        id: npm_check
-        run: |
-          VERSION="${{ steps.pkg.outputs.version }}"
-          if npm view "@tiny-owl-kit/observability@${VERSION}" version 2>/dev/null | grep -qF "${VERSION}"; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish to npm
-        if: steps.tag_check.outputs.exists == 'false' && steps.npm_check.outputs.published == 'false'
+        if: steps.npm_check.outputs.published == 'false'
         run: npm publish --provenance --access public
         env:
-          # NPM_TOKEN (automation token) or OIDC Trusted Publishing — both supported.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Skip (version already on npm)
-        if: steps.tag_check.outputs.exists == 'false' && steps.npm_check.outputs.published == 'true'
+      - name: Skip (already on npm)
+        if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
+        run: echo "v${{ steps.pkg.outputs.version }} already on npm — tag created, skipping publish."
+
         run: echo "v${{ steps.pkg.outputs.version }} already exists on npm — skipping publish."
