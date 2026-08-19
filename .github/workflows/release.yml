@@ -96,7 +96,9 @@ jobs:
         if: steps.npm_check.outputs.published == 'false'
         run: npm publish --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Ignore setup-node's .npmrc (_authToken config blocks OIDC fallback).
+          # With no explicit token, npm uses OIDC Trusted Publishing automatically.
+          NPM_CONFIG_USERCONFIG: /dev/null
 
       - name: Skip (already on npm)
         if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
