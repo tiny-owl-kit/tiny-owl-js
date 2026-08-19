@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-08-19
+
+### Fixed
+
+- Release workflow: publish to npm via OIDC trusted publishing now works. Root
+  cause of the earlier `ENEEDAUTH` failures was that npm OIDC trusted publishing
+  requires npm CLI >= 11.5.1 and Node >= 22.14.0, but the workflow ran on Node 20
+  (npm 10.x, no OIDC support). Bumped `setup-node` to Node 24, added an
+  `npm install -g npm@latest` step, and simplified publishing to a plain
+  `npm publish --access public` (OIDC auto-detected, provenance auto-generated)
+
 ## [1.4.3] - 2026-08-19
 
 ### Fixed
