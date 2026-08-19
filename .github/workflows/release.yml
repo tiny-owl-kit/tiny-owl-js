@@ -103,8 +103,9 @@ jobs:
         if: steps.npm_check.outputs.published == 'false'
         run: npm publish --provenance --access public
         env:
-          # Force-clear any token that might override OIDC detection.
           NODE_AUTH_TOKEN: ""
+          # /dev/null so npm reads no _authToken entry; empty token = ENEEDAUTH, absent token = OIDC
+          NPM_CONFIG_USERCONFIG: /dev/null
 
       - name: Skip (already on npm)
         if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
