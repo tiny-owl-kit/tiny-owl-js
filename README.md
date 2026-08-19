@@ -619,6 +619,21 @@ const client = new TinyOwl({
 - [TinyOwl Documentation](https://github.com/Regis011/tiny-owl-kit/tree/main/docs)
 - [API Reference](https://github.com/Regis011/tiny-owl-kit/blob/main/docs/API.md)
 
+## Release
+
+Releases are fully automated and version-driven:
+
+1. Bump `version` in `package.json` and update `CHANGELOG.md`.
+2. Merge to `main` → `auto-tag.yml` creates a `v<version>` git tag (idempotent no-op if the version is unchanged).
+3. The new tag triggers `publish.yml` → runs tests + build → publishes to npm with a provenance attestation.
+
+No manual `npm publish` is needed. The version on npm always matches the tag on `main`.
+
+**Setup requirements** (one-time, done by a maintainer):
+
+- Enable [npm Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) for `@tiny-owl-kit/observability`, **or** add an `NPM_TOKEN` automation secret to the GitHub repo.
+- Ensure the npm account allows automated publishing (Trusted Publishing / automation tokens bypass interactive 2FA).
+
 ## License
 
 MIT License - see [LICENSE](../LICENSE) file for details.

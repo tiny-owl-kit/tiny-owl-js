@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-19
+
+### Changed
+
+- Release automation: added `publish.yml` GitHub Actions workflow — version bumps on `main` now publish to npm automatically with OIDC provenance; no manual `npm publish` required
+- Security hardening: `auto-tag.yml` action pinned to commit SHA (supply-chain hardening)
+- Documentation: added `## Release` section to README documenting the automated release flow
+
 ## [1.4.1] - 2026-08-18
 
 ### Changed
