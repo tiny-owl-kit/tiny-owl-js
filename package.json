@@ -1,6 +1,6 @@
 {
   "name": "@tiny-owl-kit/observability",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "TinyOwl JavaScript SDK - Lightweight observability and logging with enterprise-grade security",
   "keywords": [
     "observability",

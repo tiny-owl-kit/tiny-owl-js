@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-08-19
+
+### Fixed
+
+- Release workflow: replace two-stage `auto-tag.yml` + `publish.yml` chain with a single `release.yml` — the previous setup was broken because GitHub Actions blocks downstream workflow triggers from `GITHUB_TOKEN` tag pushes
+
 ## [1.4.2] - 2026-08-19
 
 ### Changed

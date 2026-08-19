@@ -14,8 +14,8 @@ on:
       - package.json
 
 permissions:
-  contents: write   # create + push the git tag
-  id-token: write   # npm provenance attestation via OIDC
+  contents: write # create + push the git tag
+  id-token: write # npm provenance attestation via OIDC
 
 concurrency:
   group: release-main
