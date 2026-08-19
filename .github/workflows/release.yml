@@ -68,7 +68,8 @@ jobs:
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.1.0
         with:
           node-version: 20
-          registry-url: "https://registry.npmjs.org"
+          # no registry-url: setup-node would inject NODE_AUTH_TOKEN (= GITHUB_TOKEN)
+          # into every subsequent step, blocking npm from falling through to OIDC
 
       - name: Install dependencies
         if: steps.npm_check.outputs.published == 'false'
@@ -95,10 +96,7 @@ jobs:
       - name: Publish to npm
         if: steps.npm_check.outputs.published == 'false'
         run: npm publish --provenance --access public
-        env:
-          # Ignore setup-node's .npmrc (_authToken config blocks OIDC fallback).
-          # With no explicit token, npm uses OIDC Trusted Publishing automatically.
-          NPM_CONFIG_USERCONFIG: /dev/null
+        # No auth env vars: npm detects ACTIONS_ID_TOKEN_REQUEST_URL and uses OIDC automatically.
 
       - name: Skip (already on npm)
         if: steps.npm_check.outputs.published == 'true' && steps.tag_check.outputs.exists == 'false'
