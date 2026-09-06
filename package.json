@@ -1,6 +1,6 @@
 {
   "name": "@tiny-owl-kit/observability",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "TinyOwl JavaScript SDK - Lightweight observability and logging with enterprise-grade security",
   "keywords": [
     "observability",
@@ -12,7 +12,7 @@
     "analytics"
   ],
   "author": "TinyOwl - Vladimir Rancic <vladimir.rancic@np011.se>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "homepage": "https://tiny-owl-kit.io",
   "repository": {
     "type": "git",
