@@ -1,5 +1,10 @@
 # TinyOwl JS SDK
 
+[![npm version](https://badge.fury.io/js/%40tiny-owl-kit%2Fobservability.svg)](https://www.npmjs.com/package/@tiny-owl-kit/observability)
+[![npm downloads](https://img.shields.io/npm/dm/@tiny-owl-kit/observability.svg)](https://www.npmjs.com/package/@tiny-owl-kit/observability)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Node.js Version](https://img.shields.io/node/v/@tiny-owl-kit/observability.svg)](https://nodejs.org)
+
 Official JavaScript SDK for TinyOwl Observability - A lightweight event logging and monitoring solution with enterprise-grade security features.
 
 ## 🤖 AI Agent Setup
