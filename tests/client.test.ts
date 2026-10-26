@@ -114,6 +114,32 @@ describe("TinyITClient", () => {
       expect(headers!["x-nonce"]).toMatch(/^[a-f0-9]{32}$/); // 32 char hex
     });
 
+    it("should send canonical body with apiKey in body and no x-api-key header", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      await client.sendCanonical("/ingest", {
+        message: "canonical",
+        severity: "warning",
+        context: { a: 1 },
+      });
+
+      const init = mockFetch.mock.calls[0]![1] as RequestInit;
+      const headers = init.headers as Record<string, string>;
+      expect(headers).not.toHaveProperty("x-api-key");
+      expect(headers).toHaveProperty("x-signature");
+
+      const body = JSON.parse(init.body as string);
+      expect(body).toEqual({
+        apiKey: "test-api-key",
+        message: "canonical",
+        severity: "warning",
+        context: { a: 1 },
+      });
+    });
+
     it("should not include security headers when security is disabled", async () => {
       const clientWithoutSecurity = new TinyITClient({
         apiUrl: "https://api.test.com",

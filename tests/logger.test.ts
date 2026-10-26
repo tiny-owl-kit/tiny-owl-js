@@ -28,7 +28,7 @@ describe("TinyITLogger", () => {
 
     // Create mock client instance
     mockClient = {
-      send: jest
+      sendCanonical: jest
         .fn()
         .mockImplementation(() => Promise.resolve({ success: true })),
       getStatus: jest.fn().mockReturnValue({
@@ -75,6 +75,30 @@ describe("TinyITLogger", () => {
       });
     });
 
+    it("should warn when project secret is missing or empty", () => {
+      const warnSpy = jest
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+
+      new TinyITLogger({ apiUrl: "https://api.test.com", apiKey: "k" });
+      new TinyITLogger({
+        apiUrl: "https://api.test.com",
+        apiKey: "k",
+        projectSecret: "",
+      });
+      new TinyITLogger({
+        apiUrl: "https://api.test.com",
+        apiKey: "k",
+        projectSecret: "s",
+      });
+
+      expect(warnSpy).toHaveBeenCalledTimes(2);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("No project secret"),
+      );
+      warnSpy.mockRestore();
+    });
+
     it("should merge client configuration options", () => {
       const configWithOptions = {
         ...mockConfig,
@@ -103,11 +127,10 @@ describe("TinyITLogger", () => {
 
       await logger.info(message, meta);
 
-      expect(mockClient.send).toHaveBeenCalledWith("/ingest", {
-        level: "info",
+      expect(mockClient.sendCanonical).toHaveBeenCalledWith("/ingest", {
         message,
-        meta,
-        timestamp: expect.any(String),
+        severity: "info",
+        context: meta,
       });
     });
 
@@ -117,11 +140,10 @@ describe("TinyITLogger", () => {
 
       await logger.error(message, meta);
 
-      expect(mockClient.send).toHaveBeenCalledWith("/ingest", {
-        level: "error",
+      expect(mockClient.sendCanonical).toHaveBeenCalledWith("/ingest", {
         message,
-        meta,
-        timestamp: expect.any(String),
+        severity: "error",
+        context: meta,
       });
     });
 
@@ -131,38 +153,21 @@ describe("TinyITLogger", () => {
 
       await logger.warn(message, meta);
 
-      expect(mockClient.send).toHaveBeenCalledWith("/ingest", {
-        level: "warn",
+      expect(mockClient.sendCanonical).toHaveBeenCalledWith("/ingest", {
         message,
-        meta,
-        timestamp: expect.any(String),
+        severity: "warning",
+        context: meta,
       });
     });
 
     it("should handle empty metadata", async () => {
       await logger.info("Test message");
 
-      expect(mockClient.send).toHaveBeenCalledWith("/ingest", {
-        level: "info",
+      expect(mockClient.sendCanonical).toHaveBeenCalledWith("/ingest", {
         message: "Test message",
-        meta: {},
-        timestamp: expect.any(String),
+        severity: "info",
+        context: {},
       });
-    });
-
-    it("should include valid ISO timestamp", async () => {
-      await logger.info("Test message");
-
-      const callArgs = mockClient.send.mock.calls[0];
-      expect(callArgs).toBeDefined();
-
-      const logPayload = callArgs![1];
-      const timestamp = logPayload.timestamp;
-
-      expect(timestamp).toMatch(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-      );
-      expect(new Date(timestamp).getTime()).toBeGreaterThan(Date.now() - 1000);
     });
   });
 
@@ -217,7 +222,7 @@ describe("TinyITLogger", () => {
   describe("Error Handling", () => {
     it("should handle client send errors with context", async () => {
       const clientError = new Error("Network error");
-      mockClient.send.mockRejectedValueOnce(clientError);
+      mockClient.sendCanonical.mockRejectedValueOnce(clientError);
 
       try {
         await logger.error("Test error message", { code: 500 });
@@ -237,7 +242,7 @@ describe("TinyITLogger", () => {
     it("should truncate long messages in error context", async () => {
       const longMessage = "A".repeat(200);
       const clientError = new Error("Network error");
-      mockClient.send.mockRejectedValueOnce(clientError);
+      mockClient.sendCanonical.mockRejectedValueOnce(clientError);
 
       try {
         await logger.info(longMessage);
@@ -248,7 +253,7 @@ describe("TinyITLogger", () => {
     });
 
     it("should handle non-Error objects", async () => {
-      mockClient.send.mockRejectedValueOnce("String error");
+      mockClient.sendCanonical.mockRejectedValueOnce("String error");
 
       try {
         await logger.info("Test message");
@@ -308,26 +313,26 @@ describe("TinyITLogger", () => {
 
       await Promise.all(promises);
 
-      expect(mockClient.send).toHaveBeenCalledTimes(4);
-      expect(mockClient.send).toHaveBeenNthCalledWith(
+      expect(mockClient.sendCanonical).toHaveBeenCalledTimes(4);
+      expect(mockClient.sendCanonical).toHaveBeenNthCalledWith(
         1,
         "/ingest",
-        expect.objectContaining({ level: "info", message: "Message 1" }),
+        expect.objectContaining({ severity: "info", message: "Message 1" }),
       );
-      expect(mockClient.send).toHaveBeenNthCalledWith(
+      expect(mockClient.sendCanonical).toHaveBeenNthCalledWith(
         2,
         "/ingest",
-        expect.objectContaining({ level: "error", message: "Message 2" }),
+        expect.objectContaining({ severity: "error", message: "Message 2" }),
       );
-      expect(mockClient.send).toHaveBeenNthCalledWith(
+      expect(mockClient.sendCanonical).toHaveBeenNthCalledWith(
         3,
         "/ingest",
-        expect.objectContaining({ level: "warn", message: "Message 3" }),
+        expect.objectContaining({ severity: "warning", message: "Message 3" }),
       );
-      expect(mockClient.send).toHaveBeenNthCalledWith(
+      expect(mockClient.sendCanonical).toHaveBeenNthCalledWith(
         4,
         "/ingest",
-        expect.objectContaining({ level: "info", message: "Message 4" }),
+        expect.objectContaining({ severity: "info", message: "Message 4" }),
       );
     });
   });

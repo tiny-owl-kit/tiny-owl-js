@@ -170,15 +170,19 @@ describe("End-to-End Integration", () => {
         method: "POST",
         headers: expect.objectContaining({
           "Content-Type": "application/json",
-          "x-api-key": "test-key",
           "x-tinyit-sdk-version": "0.1.0",
           "x-signature": expect.any(String),
           "x-timestamp": expect.any(String),
           "x-nonce": expect.any(String),
         }),
-        body: expect.stringContaining('"message":"Integration test message"'),
+        body: expect.stringContaining('"apiKey":"test-key"'),
       }),
     );
+    const sentBody = JSON.parse(
+      (mockFetch.mock.calls[0]?.[1] as RequestInit).body as string,
+    );
+    expect(sentBody.message).toBe("Integration test message");
+    expect(sentBody.severity).toBe("info");
   });
 
   it("should handle network errors with retry", async () => {
@@ -222,8 +226,9 @@ describe("End-to-End Integration", () => {
     expect(headers?.["x-signature"]).toBeUndefined();
     expect(headers?.["x-timestamp"]).toBeUndefined();
     expect(headers?.["x-nonce"]).toBeUndefined();
-    expect(headers?.["x-api-key"]).toBe("test-key");
+    expect(headers?.["x-api-key"]).toBeUndefined();
     expect(headers?.["x-tinyit-sdk-version"]).toBe("0.1.0");
+    expect(JSON.parse(init.body as string).apiKey).toBe("test-key");
   });
 
   it("should handle server errors appropriately", async () => {
@@ -295,10 +300,10 @@ describe("Real-World Usage Scenarios", () => {
       JSON.parse((call[1] as RequestInit).body as string),
     );
 
-    expect(bodies[0]?.level).toBe("info");
-    expect(bodies[1]?.level).toBe("warn");
-    expect(bodies[2]?.level).toBe("error");
-    expect(bodies[3]?.level).toBe("info");
+    expect(bodies[0]?.severity).toBe("info");
+    expect(bodies[1]?.severity).toBe("warning");
+    expect(bodies[2]?.severity).toBe("error");
+    expect(bodies[3]?.severity).toBe("info");
   });
 
   it("should handle complex metadata structures", async () => {
@@ -342,6 +347,6 @@ describe("Real-World Usage Scenarios", () => {
     const callArgs = mockFetch.mock.calls[0];
     const body = JSON.parse((callArgs?.[1] as RequestInit).body as string);
 
-    expect(body.meta).toEqual(complexMeta);
+    expect(body.context).toEqual(complexMeta);
   });
 });

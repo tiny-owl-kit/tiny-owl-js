@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.7] - 2026-10-26
+
+### Fixed
+
+- `TinyITLogger` now sends the canonical HMAC body via the new `TinyITClient.sendCanonical()`. The body is `{ apiKey, message, severity, context }`, the API key is no longer sent in the `x-api-key` header, and the signature covers that body.
+- `TinyITLogger` maps `warn` to `warning` severity. Previously the backend rejected it.
+- `TinyITLogger` no longer sends a top-level `timestamp` in the body. The signed `x-timestamp` header covers time validation.
+- `TinyITLogger` logs a warning when no `projectSecret` is provided, since the backend requires HMAC signing and rejects unsigned requests with 401.
+
+### Added
+
+- `TinyITClient.sendCanonical()`, which sends the canonical HMAC body.
+
+### Deprecated
+
+- `TinyITClient.send()` is deprecated in favor of `sendCanonical()`. Its behavior is unchanged.
+
+## [1.4.6] - 2026-09-06
+
+### Changed
+
+- License changed to Apache-2.0.
+
 ## [1.4.5] - 2026-08-19
 
 ### Fixed

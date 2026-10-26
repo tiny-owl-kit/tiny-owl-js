@@ -199,10 +199,10 @@ describe("Browser Environment Compatibility", () => {
       const callArgs = mockFetch.mock.calls[0];
       const body = JSON.parse((callArgs?.[1] as RequestInit).body as string);
 
-      expect(body.meta.userAgent).toBe("Mozilla/5.0 (Test Browser)");
-      expect(body.meta.language).toBe("en-US");
-      expect(body.meta.url).toBe("https://example.com/page");
-      expect(body.meta.screenResolution).toBe("1920x1080");
+      expect(body.context.userAgent).toBe("Mozilla/5.0 (Test Browser)");
+      expect(body.context.language).toBe("en-US");
+      expect(body.context.url).toBe("https://example.com/page");
+      expect(body.context.screenResolution).toBe("1920x1080");
     });
 
     it("should handle localStorage/sessionStorage metadata safely", async () => {
