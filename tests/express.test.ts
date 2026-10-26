@@ -110,6 +110,7 @@ describe("TinyowlRequestLogger", () => {
     expect(client.info).toHaveBeenCalledWith("fetched user", {
       method: "GET",
       endpoint: "/api/users/:id",
+      routeTemplate: "/api/users/:id",
     });
   });
 
@@ -176,6 +177,26 @@ describe("tinyowlExpress.errorHandler", () => {
       statusCode: 500,
     });
     expect(next).toHaveBeenCalledWith(err);
+  });
+
+  it("reports durationMs on error events when the request went through the middleware", () => {
+    const client = makeMockClient();
+    const req = makeMockRequest({ method: "GET", path: "/slow" });
+    tinyowlExpress(client)(req, {} as Response, jest.fn() as unknown as NextFunction);
+
+    tinyowlExpress.errorHandler(client)(
+      new Error("slow failure"),
+      req,
+      makeMockResponse(200),
+      jest.fn() as unknown as NextFunction,
+    );
+
+    expect(client.error).toHaveBeenCalledWith("slow failure", {
+      method: "GET",
+      endpoint: "/slow",
+      statusCode: 500,
+      durationMs: expect.any(Number),
+    });
   });
 
   it("prefers an already-set 4xx/5xx response status over the error's own status", () => {

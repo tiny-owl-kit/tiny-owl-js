@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-27
+
+### Added
+
+- `service` and `environment` client options. Both are sent top-level on every event and included in the HMAC signature only when set, matching the backend's signed payload.
+- Express adapter (`tinyowlExpress`) reports `routeTemplate` (the matched route, e.g. `/users/:id`) when Express has matched a route with a string path, and `durationMs` on error events logged through the error handler.
+- Next.js adapter (`withTinyowl`) reports `durationMs` on error and `>= 400` events. `routeTemplate` is set when the `route` option is provided.
+
 ## [1.4.7] - 2026-10-26
 
 ### Fixed

@@ -19,6 +19,8 @@ const client = new TinyOwl({
   projectSecret:
     process.env.TINYOWL_PROJECT_SECRET ?? "your-project-secret-here",
   baseUrl: process.env.TINYOWL_BASE_URL ?? "http://localhost:5001/api",
+  service: "nextjs-example",
+  environment: process.env.NODE_ENV ?? "development",
 });
 
 // app/api/users/[id]/route.ts

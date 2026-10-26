@@ -17,6 +17,7 @@ import type { EchoNova } from "./index.js";
 export interface TinyowlRequestContext extends Record<string, unknown> {
   method: string;
   endpoint: string;
+  routeTemplate?: string;
 }
 
 /**
@@ -25,12 +26,17 @@ export interface TinyowlRequestContext extends Record<string, unknown> {
  * matched a route yet (e.g. a 404 with no matching route).
  */
 function resolveRequestContext(req: Request): TinyowlRequestContext {
-  const routePath = (req.route as { path?: string } | undefined)?.path;
+  const rawRoutePath = (req.route as { path?: unknown } | undefined)?.path;
+  const routePath = typeof rawRoutePath === "string" ? rawRoutePath : undefined;
   const endpoint = routePath
     ? `${req.baseUrl ?? ""}${routePath}` || "/"
     : req.path || req.originalUrl?.split("?")[0] || "/";
 
-  return { method: req.method, endpoint };
+  return {
+    method: req.method,
+    endpoint,
+    ...(routePath !== undefined ? { routeTemplate: endpoint } : {}),
+  };
 }
 
 /**
@@ -46,7 +52,14 @@ export class TinyowlRequestLogger {
   constructor(
     private readonly client: EchoNova,
     private readonly req: Request,
+    private readonly startedAt?: number,
   ) {}
+
+  /** Milliseconds since the request entered the middleware; `undefined` when not tracked. */
+  elapsedMs(): number | undefined {
+    if (this.startedAt === undefined) return undefined;
+    return Date.now() - this.startedAt;
+  }
 
   private context(extra: Record<string, unknown>): Record<string, unknown> {
     return { ...resolveRequestContext(this.req), ...extra };
@@ -77,7 +90,7 @@ declare global {
 
 function tinyowlExpressMiddlewareFactory(client: EchoNova): RequestHandler {
   return function tinyowlExpressMiddleware(req, _res, next) {
-    req.tinyowl = new TinyowlRequestLogger(client, req);
+    req.tinyowl = new TinyowlRequestLogger(client, req, Date.now());
     next();
   };
 }
@@ -102,7 +115,13 @@ function tinyowlExpressErrorHandlerFactory(
     const message = err instanceof Error ? err.message : String(err);
 
     // Fire-and-forget — a logging failure must never break the app's error flow.
-    logger.error(message, { statusCode }).catch(() => {});
+    const durationMs = logger.elapsedMs();
+    logger
+      .error(message, {
+        statusCode,
+        ...(durationMs !== undefined ? { durationMs } : {}),
+      })
+      .catch(() => {});
 
     // Never swallow the error — the application's own error handling still runs.
     next(err);
