@@ -20,6 +20,15 @@ export interface LogMetadata {
 export type LogLevel = "info" | "error" | "warn";
 
 /**
+ * Maps SDK log levels to the canonical TinyOwl severities accepted by the backend.
+ */
+const SEVERITY_BY_LEVEL: Record<LogLevel, "info" | "warning" | "error"> = {
+  info: "info",
+  warn: "warning",
+  error: "error",
+};
+
+/**
  * Configuration for TinyITLogger
  */
 export interface TinyITLoggerConfig {
@@ -53,6 +62,12 @@ export class TinyITLogger {
     };
 
     this.client = new TinyITClient(clientConfig);
+
+    if (!config.projectSecret) {
+      console.warn(
+        "TinyIT SDK: No project secret provided. The backend requires HMAC signing and will reject unsigned requests with 401.",
+      );
+    }
   }
 
   /**
@@ -106,17 +121,16 @@ export class TinyITLogger {
       throw new Error("Log metadata must be an object");
     }
 
-    // Prepare log payload
+    // Canonical body: key order matches the HMAC-signed payload in src/index.ts
     const logPayload = {
-      level,
       message,
-      meta,
-      timestamp: new Date().toISOString(),
+      severity: SEVERITY_BY_LEVEL[level],
+      context: meta,
     };
 
     try {
       // Send via client (which handles queuing, retries, etc.)
-      return await this.client.send("/ingest", logPayload);
+      return await this.client.sendCanonical("/ingest", logPayload);
     } catch (error) {
       // Enhanced error handling with context
       const logError = new Error(

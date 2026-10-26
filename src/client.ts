@@ -54,6 +54,7 @@ export interface TinyITClientConfig {
 interface QueuedRequest {
   endpoint: string;
   data: any;
+  canonical?: boolean;
   timestamp: number;
   retryCount: number;
   resolve: (value: any) => void;
@@ -106,12 +107,39 @@ export class TinyITClient {
    * @param endpoint - API endpoint (e.g., "/logs")
    * @param data - Request payload
    * @returns Promise that resolves when the request is successfully sent
+   * @deprecated Use {@link TinyITClient.sendCanonical} for payloads that must match the canonical HMAC body (API key in body, no x-api-key header).
    */
   async send(endpoint: string, data: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const queuedRequest: QueuedRequest = {
         endpoint: endpoint.startsWith("/") ? endpoint : `/${endpoint}`,
         data,
+        timestamp: Date.now(),
+        retryCount: 0,
+        resolve,
+        reject,
+      };
+
+      this.queue.push(queuedRequest);
+
+      if (!this.isSending) {
+        this.processQueue();
+      }
+    });
+  }
+
+  /**
+   * Send a request using the canonical TinyOwl wire format.
+   * The API key travels in the body (not a header) and the HMAC signature covers the body without it.
+   * @param endpoint - API endpoint (e.g., "/ingest")
+   * @param data - Canonical body without apiKey (message, severity, context, traceId?)
+   */
+  async sendCanonical(endpoint: string, data: Record<string, unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const queuedRequest: QueuedRequest = {
+        endpoint: endpoint.startsWith("/") ? endpoint : `/${endpoint}`,
+        data,
+        canonical: true,
         timestamp: Date.now(),
         retryCount: 0,
         resolve,
@@ -170,9 +198,12 @@ export class TinyITClient {
     // Prepare headers
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "x-api-key": this.apiKey,
       "x-tinyit-sdk-version": this.sdkVersion,
     };
+
+    if (!request.canonical) {
+      headers["x-api-key"] = this.apiKey;
+    }
 
     // Add security headers if enabled
     if (this.enableSecurity && this.projectSecret) {
@@ -192,7 +223,11 @@ export class TinyITClient {
     const response = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify(request.data),
+      body: JSON.stringify(
+        request.canonical
+          ? { apiKey: this.apiKey, ...request.data }
+          : request.data,
+      ),
       signal: AbortSignal.timeout(this.timeout),
     });
 
