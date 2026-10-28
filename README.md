@@ -74,6 +74,8 @@ const client = new TinyOwl({
   timeout: 5000, // Optional: Request timeout (ms)
   autoTraceId: true, // Optional: Auto-generate trace ID per instance
   defaultContext: { service: "api" }, // Optional: Merged into every log() call
+  service: "checkout-api", // Optional: Sent top-level and signed when set
+  environment: "production", // Optional: Sent top-level and signed when set
 });
 ```
 
@@ -172,6 +174,8 @@ The optional `@tiny-owl-kit/observability/express` subpath export auto-fills
 so you don't have to pass them manually. It's additive and opt-in — the core
 SDK is unaffected if you never import it.
 
+When Express has matched a route with a string path, the adapter also sets `context.routeTemplate` (e.g. `/users/:id`). Error events logged through the error handler include `context.durationMs`.
+
 ```javascript
 import { TinyOwl } from "@tiny-owl-kit/observability";
 import { tinyowlExpress } from "@tiny-owl-kit/observability/express";
@@ -209,6 +213,8 @@ The optional `@tiny-owl-kit/observability/nextjs` subpath export wraps App
 Router Route Handlers (`route.ts`) with the same auto-capture behavior as the
 Express adapter. It's additive and opt-in, and it doesn't import `next/server`
 internally — any request object shaped like Next's `NextRequest` works.
+
+Error and `>= 400` events include `context.durationMs`. Pass `{ route: "/users/[id]" }` as the third argument of `withTinyowl(client, handler, options)` to report a low-cardinality `context.routeTemplate`.
 
 ```typescript
 // app/api/users/[id]/route.ts

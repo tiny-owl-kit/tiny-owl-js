@@ -77,6 +77,9 @@ export function withTinyowl<Req extends TinyowlNextRequestLike, Ctx = unknown>(
   ): Promise<Response> {
     const { method, endpoint } = resolveRequestContext(req);
     const finalEndpoint = options.route ?? endpoint;
+    const routeTemplate = options.route;
+    const startedAt = Date.now();
+    const elapsedMs = (): number => Date.now() - startedAt;
 
     try {
       const response = await handler(req, ctx);
@@ -86,6 +89,8 @@ export function withTinyowl<Req extends TinyowlNextRequestLike, Ctx = unknown>(
             method,
             endpoint: finalEndpoint,
             statusCode: response.status,
+            durationMs: elapsedMs(),
+            ...(routeTemplate !== undefined ? { routeTemplate } : {}),
           })
           .catch(() => {});
       }
@@ -97,6 +102,8 @@ export function withTinyowl<Req extends TinyowlNextRequestLike, Ctx = unknown>(
           method,
           endpoint: finalEndpoint,
           statusCode: 500,
+          durationMs: elapsedMs(),
+          ...(routeTemplate !== undefined ? { routeTemplate } : {}),
         })
         .catch(() => {});
       // Never swallow the error — Next's own error handling still runs.

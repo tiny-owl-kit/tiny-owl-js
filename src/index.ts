@@ -64,6 +64,10 @@ export interface EchoNovaConfig {
    * @default true
    */
   autoTraceId?: boolean;
+  /** Name of the service emitting events (sent top-level and included in the HMAC signature when set). */
+  service?: string;
+  /** Deployment environment, e.g. "production" (sent top-level and included in the HMAC signature when set). */
+  environment?: string;
 }
 
 /**
@@ -102,6 +106,8 @@ export class EchoNova {
   private readonly enableHMAC: boolean;
   private readonly defaultContext: Record<string, unknown>;
   private readonly autoTraceId: boolean;
+  private readonly service: string | undefined;
+  private readonly environment: string | undefined;
   /** Stable correlation ID for all events logged by this instance. */
   private readonly instanceTraceId: string | undefined;
 
@@ -121,6 +127,8 @@ export class EchoNova {
     this.timeout = config.timeout || 5000;
     this.defaultContext = config.defaultContext ?? {};
     this.autoTraceId = config.autoTraceId !== false;
+    this.service = config.service;
+    this.environment = config.environment;
 
     // Enable HMAC by default when projectSecret is provided
     this.enableHMAC =
@@ -198,6 +206,10 @@ export class EchoNova {
         enableHMAC: this.enableHMAC,
         defaultContext: mergedDefaultContext,
         autoTraceId: this.autoTraceId,
+        ...(this.service !== undefined ? { service: this.service } : {}),
+        ...(this.environment !== undefined
+          ? { environment: this.environment }
+          : {}),
       },
       childTraceId,
     );
@@ -256,6 +268,10 @@ export class EchoNova {
       severity,
       context: finalContext,
       ...(resolvedTraceId !== undefined ? { traceId: resolvedTraceId } : {}),
+      ...(this.service !== undefined ? { service: this.service } : {}),
+      ...(this.environment !== undefined
+        ? { environment: this.environment }
+        : {}),
     };
 
     // Create request headers
@@ -272,6 +288,10 @@ export class EchoNova {
           context: finalContext,
           ...(resolvedTraceId !== undefined
             ? { traceId: resolvedTraceId }
+            : {}),
+          ...(this.service !== undefined ? { service: this.service } : {}),
+          ...(this.environment !== undefined
+            ? { environment: this.environment }
             : {}),
         };
         const securityHeaders = createSecureHeaders(

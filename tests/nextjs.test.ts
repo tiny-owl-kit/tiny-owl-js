@@ -67,6 +67,7 @@ describe("withTinyowl", () => {
       method: "GET",
       endpoint: "/users/123",
       statusCode: 404,
+      durationMs: expect.any(Number),
     });
   });
 
@@ -86,6 +87,28 @@ describe("withTinyowl", () => {
     expect(client.error).toHaveBeenCalledWith(
       expect.stringContaining("/users/[id]"),
       expect.objectContaining({ endpoint: "/users/[id]" }),
+    );
+  });
+
+  it("sets routeTemplate only when options.route is provided", async () => {
+    const client = makeMockClient();
+    const withRoute = withTinyowl(
+      client,
+      async () => Response.json({}, { status: 500 }),
+      { route: "/users/[id]" },
+    );
+    const withoutRoute = withTinyowl(client, async () =>
+      Response.json({}, { status: 500 }),
+    );
+
+    await withRoute(makeMockRequest(), undefined);
+    await withoutRoute(makeMockRequest(), undefined);
+
+    expect(client.error.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({ routeTemplate: "/users/[id]" }),
+    );
+    expect(client.error.mock.calls[1]?.[1]).not.toHaveProperty(
+      "routeTemplate",
     );
   });
 
@@ -121,6 +144,7 @@ describe("withTinyowl", () => {
       method: "POST",
       endpoint: "/users/123",
       statusCode: 500,
+      durationMs: expect.any(Number),
     });
   });
 
@@ -141,6 +165,7 @@ describe("withTinyowl", () => {
       method: "GET",
       endpoint: "/users/123",
       statusCode: 500,
+      durationMs: expect.any(Number),
     });
   });
 
